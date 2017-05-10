@@ -4,5 +4,4 @@ numpy
 requests
 selenium
 tabulate
-unicodedata
 
