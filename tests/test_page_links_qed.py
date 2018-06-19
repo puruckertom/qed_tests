@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import numpy.testing as npt
 import unittest
 from tabulate import tabulate
-import linkcheck_helper
+from . import linkcheck_helper
 
 #this routine scans the main ubertool page for url links and verifies that they respond
 #these links are repeated (as a template of sorts) on all model pages; but tested here only
@@ -46,10 +46,10 @@ class TestPageLinks(unittest.TestCase):
                         assert_error = True
                     except Exception as e:
                         # handle any other exception
-                        print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+                        print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
         except Exception as e:
             # handle any other exception
-            print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+            print("Error '{0}' occurred. Arguments {1}.".format(e.message, e.args))
         finally:
              linkcheck_helper.write_report(test_name, assert_error, link_url, status)
         return
@@ -76,10 +76,10 @@ class TestPageLinks(unittest.TestCase):
                         assert_error = True
                     except Exception as e:
                         # handle any other exception
-                        print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+                        print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
         except Exception as e:
             # handle any other exception
-            print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+            print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
         finally:
             linkcheck_helper.write_report(test_name, assert_error, link_url, status)
         return
@@ -106,10 +106,10 @@ class TestPageLinks(unittest.TestCase):
                         assert_error = True
                     except Exception as e:
                         # handle any other exception
-                        print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+                        print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
         except Exception as e:
             # handle any other exception
-            print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+            print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
         finally:
             linkcheck_helper.write_report(test_name, assert_error, link_url, status)
         return
@@ -136,10 +136,10 @@ class TestPageLinks(unittest.TestCase):
                         assert_error = True
                     except Exception as e:
                         # handle any other exception
-                        print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+                        print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
         except Exception as e:
             # handle any other exception
-            print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+            print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
         finally:
             linkcheck_helper.write_report(test_name, assert_error, link_url, status)
         return
@@ -166,10 +166,10 @@ class TestPageLinks(unittest.TestCase):
                         assert_error = True
                     except Exception as e:
                         # handle any other exception
-                        print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+                        print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
         except Exception as e:
             # handle any other exception
-            print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+            print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
         finally:
             linkcheck_helper.write_report(test_name, assert_error, link_url, status)
         return

@@ -2,35 +2,44 @@ import requests
 import unittest
 import numpy.testing as npt
 from bs4 import BeautifulSoup
-import mechanize # for populating and submitting input data forms
+import mechanicalsoup # for populating and submitting input data forms
 import unicodedata
 from tabulate import tabulate
-import linkcheck_helper
+from . import linkcheck_helper
+
 
 test = {}
 
-servers = ["http://qed.epa.gov/ubertool/", "http://qedinternal.epa.gov/ubertool/",
-          "http://134.67.114.3/ubertool/", "http://134.67.114.1/ubertool/"]
+servers = ["http://qed.epa.gov/pram/", "http://qedinternal.epa.gov/pram/",
+           'http://134.67.114.5/pram/']
 
+models2 = ["sip/", "varroapop/"]
 models = ["sip/", "stir/", "rice/", "terrplant/",  "iec/",
           "agdrift/", "agdrift_trex/", "agdrift_therps/", "earthworm/",
-          "kabam/", "pfam/", "sam/", "therps/", "trex2/"]
+          "kabam/", "pfam/", "sam/", "therps/", "trex/", "varroapop/"]
 #models = ["sip/", "stir/", "pfam/", "earthworm/"]
 
+models_all = ["agdrift/", "beerex/", "iec/", "sip/", "stir/", 'terrplant/', 'therps/', 'trex/',
+          'kabam/', 'rice/', 'agdisp/', 'earthworm/', 'insect/', 'pat/', 'perfum/', 'pfam/',
+          'pwc/', 'sam/', 'ted/', 'varroapop/']
+
+models_nonbeta = ["agdrift/", "beerex/", "iec/", "sip/", "stir/", 'terrplant/', 'therps/', 'trex/',
+          'kabam/', 'rice/']
 #The following list represents the model page titles to be checked (order of models
 #needs to be the same as "models" list above)
 
+models_IO2 = ["SIP", "VarroaPop"]
 models_IO = ["SIP", "STIR", "RICE", "TerrPlant", "IEC",
              "AgDrift", "AgDrift & T-REX", "AgDrift & T-HERPS", "Earthworm",
-             "KABAM", "PFAM", "SAM", "T-Herps", "T-REX 1.5.2"]
+             "KABAM", "PFAM", "SAM", "T-Herps", "T-REX 1.5.2", "VarroaPop"]
 #models_IO = ["SIP", "STIR", "PFAM", "Earthworm"]
 
-pages = ["", "description", "input", "algorithms", "references", "qaqc",
-         "batchinput", "history"]
-#pages = ["description", "input"]
+#pages = ["", "description", "input", "algorithms", "references", "qaqc",]
+#         "batchinput", "history"]
+pages = ["","input", "algorithms", "references", "qaqc"]
 
-#redirect servers are those where user login for the input page is required
-redirect_servers = ["http://qed.epa.gov/ubertool/", "http://134.67.114.3/ubertool/"]
+#redirect servers are those where user login fthe input page is required
+redirect_servers = ["http://qed.epa.gov/pram/"]
 redirect_pages = ["input"]
 
 #following are lists of url's to be processed with tests below
@@ -66,10 +75,10 @@ class TestQEDHost(unittest.TestCase):
                 assert_error = True
             except Exception as e:
                 # handle any other exception
-                print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+                print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
         except Exception as e:
             # handle any other exception
-            print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+            print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
         finally:
             linkcheck_helper.write_report(test_name, assert_error, model_pages, response)
         return
@@ -94,10 +103,10 @@ class TestQEDHost(unittest.TestCase):
                 assert_error = True
             except Exception as e:
                 # handle any other exception
-                print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+                print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
         except Exception as e:
             # handle any other exception
-            print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+            print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
         finally:
             linkcheck_helper.write_report(test_name, assert_error, model_pages, check_of404)
         return
@@ -122,10 +131,10 @@ class TestQEDHost(unittest.TestCase):
                 assert_error = True
             except Exception as e:
                 # handle any other exception
-                print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+                print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
         except Exception as e:
             # handle any other exception
-            print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+            print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
         finally:
             linkcheck_helper.write_report(test_name, assert_error, redirect_model_pages, check_of302)
         return
@@ -138,15 +147,15 @@ class TestQEDHost(unittest.TestCase):
             expected_page = [""] * len(redirect_model_pages)
             assert_error = False
             for idx, m in enumerate(redirect_model_pages) :
-                br = mechanize.Browser()
+                br = mechanicalsoup.StatefulBrowser()
                 br.open(m)
                 #step 1: login and authenticate
-                br.select_form(name="auth")
-                br["username"] = "betatester"
-                br["password"] = "ubertool"
-                br.submit()
+                br.select_form('form[name="auth"]')
+                br["username"] = "qeduser"
+                br["password"] = "EcoDom18!PubServ3"
+                br.submit_selected()
                 # Verify we have successfully logged in and are now on input page
-                current_page[idx] = br.geturl()
+                current_page[idx] = br.get_url()
                 expected_page[idx] = m
             try:
                 npt.assert_array_equal(expected_page, current_page, 'Login Failed', True)
@@ -154,10 +163,10 @@ class TestQEDHost(unittest.TestCase):
                 assert_error = True
             except Exception as e:
                 # handle any other exception
-                print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+                print("Error: {}".format(str(e)))
         except Exception as e:
             # handle any other exception
-            print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+            print("Error: {}".format(str(e)))
         finally:
             linkcheck_helper.write_report(test_name, assert_error, expected_page, current_page)
         return
@@ -170,13 +179,14 @@ class TestQEDHost(unittest.TestCase):
             current_title = [""] * len(redirect_model_pages)
             expected_title = [""] * len(redirect_model_pages)
             for idx, m in enumerate(redirect_model_pages):
-                br = mechanize.Browser()
+                # Create browser object
+                br = mechanicalsoup.StatefulBrowser()
                 br.open(m)
                 #step 1: login and authenticate
-                br.select_form(name="auth")
-                br["username"] = "betatester"
-                br["password"] = "ubertool"
-                response2 = br.submit()
+                br.select_form('form[name="auth"]')
+                br["username"] = "qeduser"
+                br["password"] = "EcoDom18!PubServ3"
+                response2 = br.submit_selected()
                 response2.get_data()
                 #locate model input page title and verify it is as expected
                 soup = BeautifulSoup(response2, "html.parser")
@@ -190,10 +200,10 @@ class TestQEDHost(unittest.TestCase):
                 assert_error = True
             except Exception as e:
                 # handle any other exception
-                print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+                print("Error: {}".format(str(e)))
         except Exception as e:
             # handle any other exception
-            print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+            print("Error: {}".format(str(e)))
         finally:
             linkcheck_helper.write_report(test_name, assert_error, expected_title, current_title)
         return
@@ -206,17 +216,17 @@ class TestQEDHost(unittest.TestCase):
             current_title = [""] * len(redirect_model_pages)
             expected_title = [""] * len(redirect_model_pages)
             for idx, m in enumerate(redirect_model_pages) :
-                br = mechanize.Browser()
+                br = mechanicalsoup.StatefulBrowser()
                 response = br.open(m)
                 #step 1: login and authenticate
-                br.select_form(name="auth")
-                br["username"] = "betatester"
-                br["password"] = "ubertool"
-                response2 = br.submit()
+                br.select_form('form[name="auth"]')
+                br["username"] = "qeduser"
+                br["password"] = "EcoDom18!PubServ3"
+                response2 = br.submit_selected()
                 response2.get_data()
                 # Step 2: Select and submit input form (it will have default data in it  -  we just want to run with that for now)
                 try:
-                    br.form = list(br.forms())[0] # syntax for selecting form when form is unnamed
+                    br.form = (br.select_form(1)) # select the second form on the page (skipping search bar form)
                     response3 = br.submit()  # use mechanize to post input data
                     response3.get_data()
                     #Verify we have successfully posted input data and that we have arrived at the output page
@@ -234,10 +244,10 @@ class TestQEDHost(unittest.TestCase):
                 assert_error = True
             except Exception as e:
                 # handle any other exception
-                print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+                print("Error: {}".format(str(e)))
         except Exception as e:
             # handle any other exception
-            print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+            print("Error: {}".format(str(e)))
         finally:
             linkcheck_helper.write_report(test_name, assert_error, expected_title, current_title)
         return
