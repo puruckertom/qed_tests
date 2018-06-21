@@ -6,20 +6,18 @@ import mechanicalsoup # for populating and submitting input data forms
 import unicodedata
 from tabulate import tabulate
 from . import linkcheck_helper
+import numpy as np
+import json
 
 
-test = {}
+pub_server = "http://qed.epa.gov/pram/"
+internal_server_1 = "http://qedinternal.epa.gov/pram/"
+internal_server_5 = "http://134.67.114.5/pram/"
 
-servers = ["http://qed.epa.gov/pram/", "http://qedinternal.epa.gov/pram/",
-           'http://134.67.114.5/pram/']
 
-models2 = ["sip/", "varroapop/"]
-models = ["sip/", "stir/", "rice/", "terrplant/",  "iec/",
-          "agdrift/", "agdrift_trex/", "agdrift_therps/", "earthworm/",
-          "kabam/", "pfam/", "sam/", "therps/", "trex/", "varroapop/"]
-#models = ["sip/", "stir/", "pfam/", "earthworm/"]
+servers = [pub_server, internal_server_1, internal_server_5]
 
-models_all = ["agdrift/", "beerex/", "iec/", "sip/", "stir/", 'terrplant/', 'therps/', 'trex/',
+models = ["agdrift/", "beerex/", "iec/", "sip/", "stir/", 'terrplant/', 'therps/', 'trex/',
           'kabam/', 'rice/', 'agdisp/', 'earthworm/', 'insect/', 'pat/', 'perfum/', 'pfam/',
           'pwc/', 'sam/', 'ted/', 'varroapop/']
 
@@ -28,18 +26,18 @@ models_nonbeta = ["agdrift/", "beerex/", "iec/", "sip/", "stir/", 'terrplant/', 
 #The following list represents the model page titles to be checked (order of models
 #needs to be the same as "models" list above)
 
-models_IO2 = ["SIP", "VarroaPop"]
-models_IO = ["SIP", "STIR", "RICE", "TerrPlant", "IEC",
-             "AgDrift", "AgDrift & T-REX", "AgDrift & T-HERPS", "Earthworm",
-             "KABAM", "PFAM", "SAM", "T-Herps", "T-REX 1.5.2", "VarroaPop"]
-#models_IO = ["SIP", "STIR", "PFAM", "Earthworm"]
+models_IO = ["AgDrift", "Bee-REX", "IEC", "SIP", "STIR", "TerrPlant", "T-HERPS", 'T-REX 1.5.2',
+                 "KABAM", "RICE", "Agdisp", "Earthworm", "Insect", "Pat", "Perfum", "Pfam",
+                 "PWC", "SAM", "TED", "VarroaPop"]
+                            
+models_IO_nonbeta = ["AgDrift", "Bee-REX", "IEC", "SIP", "STIR", "TerrPlant", "T-HERPS", 'T-REX 1.5.2',
+                 "KABAM", "RICE"]
 
-#pages = ["", "description", "input", "algorithms", "references", "qaqc",]
-#         "batchinput", "history"]
-pages = ["","input", "algorithms", "references", "qaqc"]
+
+pages = ["","input", "algorithms", "references"] #for now leaving out "qaqc" page
 
 #redirect servers are those where user login fthe input page is required
-redirect_servers = ["http://qed.epa.gov/pram/"]
+redirect_servers = [pub_server]
 redirect_pages = ["input"]
 
 #following are lists of url's to be processed with tests below
@@ -48,6 +46,20 @@ redirect_model_pages = [s + m + p for s in redirect_servers for m in models
                         for p in redirect_pages]
 redirect_models = models_IO * len(redirect_servers)
 
+#all models
+pub_model_pages = [pub_server + m + p for m in models for p in pages]
+s1_model_pages = [internal_server_1 + m + p for m in models for p in pages]
+s5_model_pages = [internal_server_5 + m + p for m in models for p in pages]
+
+#non-beta only
+pub_model_pages_nonbeta = [pub_server + m + p for m in models_nonbeta for p in pages]
+s1_model_pages_nonbeta = [internal_server_1 + m + p for m in models_nonbeta for p in pages]
+s5_model_pages_nonbeta = [internal_server_5 + m + p for m in models_nonbeta for p in pages]
+
+#hooks for the qed_smoketests Slack app
+pub_server_hook = 'https://hooks.slack.com/services/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'
+s1_hook = 'https://hooks.slack.com/services/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'
+s5_hook = 'https://hooks.slack.com/services/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'
 
 class TestQEDHost(unittest.TestCase):
     """
@@ -62,29 +74,53 @@ class TestQEDHost(unittest.TestCase):
 
     def teardown(self):
         pass
+    
+    def send_slack_message(self,message, hook_url):
+       body = {"text": message}
+       url = hook_url
+       response = requests.post(url, data=json.dumps(body), headers = {'Content-type': 'application/json'})
+       return
 
-    @staticmethod
-    def test_qed_200():
+
+    def helper_response(self,page_list, code, hook_url=None):
         test_name = "Model page access "
+        print(str(page_list))
+        assert_error = False
+        response = [requests.get(m, verify=False).status_code for m in page_list]
+        print(response)
         try:
-            assert_error = False
-            response = [requests.get(m).status_code for m in model_pages]
-            try:
-                npt.assert_array_equal(response, 200, '200 error', True)
-            except AssertionError:
-                assert_error = True
-            except Exception as e:
-                # handle any other exception
-                print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
-        except Exception as e:
-            # handle any other exception
-            print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
-        finally:
-            linkcheck_helper.write_report(test_name, assert_error, model_pages, response)
+            assert all(resp == code for resp in response)
+                #assert(npt.assert_array_equal(response, 200, '200 error', True)
+        except AssertionError as e:
+            fail_indices = np.where(np.array([resp != code for resp in response]))
+            print(fail_indices)
+            fails = [page_list[i] for i in np.nditer(fail_indices)]
+            codes = [response[i] for i in np.nditer(fail_indices)]
+            message = tuple(["Http response failed for: " + str(x) + ". Expecting *" + str(code) + "* but found *" +
+                             str(y) + "*." for x, y  in zip(fails,codes)])
+            if(hook_url is not None):
+                self.send_slack_message("\n".join(message), hook_url)
+            e.args += message
+            raise
         return
 
+
+    #public server should return redirects to the login page
+    def test_pub_server_303(self):
+        self.helper_response(pub_model_pages,200, pub_server_hook)
+        return
+
+    def test_internal_s1_200(self):
+        self.helper_response(s1_model_pages,200,s1_hook )
+        return
+
+    def test_interval_s5_200(self):
+        self.helper_response(s5_model_pages,200, s5_hook)
+
+
+
     @staticmethod
-    def test_qed_404():
+    def te_st_qed_404():
         test_name = "Model page 404 "
         try:
             assert_error = False
@@ -103,16 +139,16 @@ class TestQEDHost(unittest.TestCase):
                 assert_error = True
             except Exception as e:
                 # handle any other exception
-                print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
+                print("Error: {}".format(str(e)))
         except Exception as e:
             # handle any other exception
-            print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
+            print("Error: {}".format(str(e)))
         finally:
             linkcheck_helper.write_report(test_name, assert_error, model_pages, check_of404)
         return
 
     @staticmethod
-    def test_qed_redirect():  #redirects occur on 'input' pages due to login requirement
+    def te_st_qed_redirect():  #redirects occur on 'input' pages due to login requirement
         test_name = "Model Input Page Redirect "
         try:
             response = [requests.get(m) for m in redirect_model_pages]
@@ -131,16 +167,16 @@ class TestQEDHost(unittest.TestCase):
                 assert_error = True
             except Exception as e:
                 # handle any other exception
-                print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
+                print("Error: {}".format(str(e)))
         except Exception as e:
             # handle any other exception
-            print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
+            print("Error: {}".format(str(e)))
         finally:
             linkcheck_helper.write_report(test_name, assert_error, redirect_model_pages, check_of302)
         return
 
     @staticmethod
-    def test_qed_authenticate_input():
+    def te_st_qed_authenticate_input():
         test_name = "Model Input Page Login Authentication "
         try: #need to login and then verify we land on input page
             current_page = [""] * len(redirect_model_pages)
@@ -172,7 +208,7 @@ class TestQEDHost(unittest.TestCase):
         return
 
     @staticmethod
-    def test_qed_input_form():
+    def te_st_qed_input_form():
         test_name = "Model Input Page Generation "
         try: #need to repeat login and then verify title of input page
             assert_error = False
@@ -209,7 +245,7 @@ class TestQEDHost(unittest.TestCase):
         return
 
     @staticmethod
-    def test_qed_output_form():
+    def te_st_qed_output_form():
         test_name = "Model output generation "
         try:        #need to repeat login, submit default inputs, and verify we land on output page
             assert_error = False
