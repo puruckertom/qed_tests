@@ -1,7 +1,0 @@
-bs4
-numpy
-requests
-selenium
-tabulate
-mechanicalsoup
-
