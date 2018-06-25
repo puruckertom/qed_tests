@@ -63,3 +63,9 @@ target/
 
 #Ipython Notebook
 .ipynb_checkpoints
+
+# secrets:
+smoketest_secrets.py
+
+# PyTest cashe
+.pytest_cache

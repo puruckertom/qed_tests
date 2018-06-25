@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import numpy.testing as npt
 import unittest
 from tabulate import tabulate
-import linkcheck_helper
+from . import linkcheck_helper
 
 main_server = ["http://qed.epa.gov/ubertool/", "http://qedinternal.epa.gov/ubertool/"]
 models = ["sip/", "stir/", "rice/", "terrplant/",  "iec/",
@@ -49,12 +49,12 @@ class TestTabLinks(unittest.TestCase):
                             assert_error = True
                         except Exception as e:
                             # handle any other exception
-                            print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+                            print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
                         finally:
                             linkcheck_helper.write_report(test_name, assert_error, link_url, status)
         except Exception as e:
             # handle any other exception
-            print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+            print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
         return
 
 if __name__ == '__main__':
