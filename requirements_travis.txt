@@ -1,6 +1,9 @@
-bs4
+beautifulsoup4
+coveralls
 mechanicalsoup
 numpy
+pytest
+pytest-html
 requests
 selenium
 tabulate
