@@ -2,7 +2,7 @@ language: python
 
 #version
 python:
-  - "2.7"
+  - "3.6"
 
 notifications:
   slack: qed-epa:FnRva7RtXZLlczmpxShtokg
@@ -32,7 +32,7 @@ install:
   #- python setup.py install
   - pip install --upgrade pip
   - pip --version
-  - pip install -r requirements.txt
+  - pip install -r requirements_travis.txt
 
 # command to run tests
 script:
