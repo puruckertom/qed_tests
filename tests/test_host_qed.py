@@ -99,7 +99,7 @@ class TestQEDHost(unittest.TestCase):
         else:
             body = {"text": message}
         url = hook_url
-        response = requests.post(url, data=json.dumps(body), headers = {'Content-type': 'application/json'})
+        response = requests.post(url, data=json.dumps(body), headers={'Content-type': 'application/json'})
         return
 
 
@@ -114,17 +114,16 @@ class TestQEDHost(unittest.TestCase):
         else:
             return message
 
-
-    def check_response(self, page_list, code, hook_url=None, server=None, login = False, verify=True):
+    def check_response(self, page_list, code, hook_url=None, server=None, login=False, verify=True):
         test_name = "Model page access "
         if login:
-            response = [None for x in range(0,len(page_list))]
+            response = [None for x in range(0, len(page_list))]
             for x, val in enumerate(page_list):
                 print(val)
                 br = mechanicalsoup.StatefulBrowser(raise_on_404=False)
                 initial_response = br.open(val)
                 if initial_response.status_code < 400:
-                    #login and authenticate
+                    # login and authenticate
                     br.select_form('form[name="auth"]')
                     br["username"] = smoketest_secrets.qed_user
                     br["password"] = smoketest_secrets.qed_pass
@@ -136,14 +135,14 @@ class TestQEDHost(unittest.TestCase):
             response = [requests.get(m, verify=verify).status_code for m in page_list]
         try:
             assert all(resp == code for resp in response)
-                #assert(npt.assert_array_equal(response, 200, '200 error', True)
+                # assert(npt.assert_array_equal(response, 200, '200 error', True)
         except AssertionError as e:
             fail_indices = np.where(np.array([resp != code for resp in response]))
             print(fail_indices)
             fails = [page_list[i] for i in np.nditer(fail_indices)]
             codes = [response[i] for i in np.nditer(fail_indices)]
             message = tuple(["Http response failed for: " + str(x) + ". Expecting *" + str(code) + "* but found *" +
-                             str(y) + "*." for x, y  in zip(fails,codes)])
+                             str(y) + "*." for x, y in zip(fails, codes)])
             slack_message = self.are_all_down("\n".join(message), page_list, server)
             if hook_url is not None:
                 self.send_slack_message(slack_message, hook_url, server)
@@ -156,15 +155,15 @@ class TestQEDHost(unittest.TestCase):
 
     #THE TESTS
     def test_pub_server_200(self):
-        self.check_response(pub_model_pages,200, smoketest_secrets.pub_server_hook, pub_server, login=True)
+        self.check_response(pub_model_pages, 200, smoketest_secrets.pub_server_hook, pub_server, login=True)
         return
 
     def test_internal_s1_200(self):
-        self.check_response(s1_model_pages,200,smoketest_secrets.s1_hook, internal_server_1)
+        self.check_response(s1_model_pages, 200, smoketest_secrets.s1_hook, internal_server_1)
         return
 
     def test_interval_s5_200(self):
-        self.check_response(s5_model_pages,200, smoketest_secrets.s5_hook, internal_server_5, verify=False)
+        self.check_response(s5_model_pages, 200, smoketest_secrets.s5_hook, internal_server_5, verify=False)
 
 
 

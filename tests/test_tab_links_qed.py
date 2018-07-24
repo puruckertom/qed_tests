@@ -39,6 +39,7 @@ class TestTabLinks(unittest.TestCase):
                 if div_tag_article:
                     article_links = div_tag_article[0].find_all('a')
                     if article_links:
+                        assert_error = False
                         link_url = [""] * len(article_links)
                         status = [""] * len(article_links)
                         link_url = linkcheck_helper.build_http_links(page, article_links)
@@ -49,13 +50,14 @@ class TestTabLinks(unittest.TestCase):
                             assert_error = True
                         except Exception as e:
                             # handle any other exception
-                            print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
+                            print("Error '{}' occurred. Arguments {}.".format(e, e.args))
                         finally:
                             linkcheck_helper.write_report(test_name, assert_error, link_url, status)
         except Exception as e:
             # handle any other exception
-            print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
+            print("Error '{}' occurred. Arguments {}.".format(e, e.args))
         return
+
 
 if __name__ == '__main__':
     unittest.main()
