@@ -15,4 +15,4 @@ before_install:
 install: "./travis_build.sh"
 
 script:
-- pytest ./tests/test_host_qed.py
+- python -m pytest ./tests/test_host_qed.py -k "pub"
