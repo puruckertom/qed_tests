@@ -129,10 +129,10 @@ class TestQAQC(unittest.TestCase, WaitForPageLoad):
                 assert_error = True
             except Exception as e:
                 # handle any other exception
-                print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+                print("Error '{0}' occured. Arguments {1}.".format(e.message, e.args))
         except Exception as e:
             # handle any other exception
-            print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
+            print("Error '{0}' occured. Arguments {1}.".format(e.message, e.args))
         finally:
             linkcheck_helper.write_report(test_name, assert_error, expected_page, current_page)
             browser.quit()
