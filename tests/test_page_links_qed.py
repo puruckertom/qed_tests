@@ -27,6 +27,9 @@ class TestPageLinks(unittest.TestCase):
     @staticmethod
     def test_qed_bannerlinks():
         test_name = "Test of Ubertool Mainpage Banner Links "
+        assert_error = False
+        link_url = ""
+        status = ""
         try:  # verify that all links on a model page produce status code of 200
             for main_server in servers:
                 response = requests.get(main_server + "/ubertool")
@@ -46,10 +49,10 @@ class TestPageLinks(unittest.TestCase):
                         assert_error = True
                     except Exception as e:
                         # handle any other exception
-                        print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
+                        print("Error '{}' occurred. Arguments {}.".format(e, e.args))
         except Exception as e:
             # handle any other exception
-            print("Error '{0}' occurred. Arguments {1}.".format(e.message, e.args))
+            print("Error '{0}' occurred. Arguments {1}.".format(e, e.args))
         finally:
              linkcheck_helper.write_report(test_name, assert_error, link_url, status)
         return
@@ -57,6 +60,9 @@ class TestPageLinks(unittest.TestCase):
     @staticmethod
     def test_qed_headerrgtlinks():
         test_name = "Test of Ubertool Mainpage Righthand Header Links "
+        assert_error = False
+        link_url = ""
+        status = ""
         try:  # verify that all links on a model page produce status code of 200
             for main_server in servers:
                 response = requests.get(main_server + "/ubertool")
@@ -76,10 +82,10 @@ class TestPageLinks(unittest.TestCase):
                         assert_error = True
                     except Exception as e:
                         # handle any other exception
-                        print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
+                        print("Error '{}' occurred. Arguments {}.".format(e, e.args))
         except Exception as e:
             # handle any other exception
-            print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
+            print("Error '{}' occurred. Arguments {}.".format(e, e.args))
         finally:
             linkcheck_helper.write_report(test_name, assert_error, link_url, status)
         return
@@ -87,6 +93,9 @@ class TestPageLinks(unittest.TestCase):
     @staticmethod
     def test_qed_leftlinks():
         test_name = "Test of Ubertool Mainpage Left Column Links "
+        assert_error = False
+        link_url = ""
+        status = ""
         try:  # verify that all links on a model page produce status code of 200
             for main_server in servers:
                 response = requests.get(main_server + "/ubertool")
@@ -106,10 +115,10 @@ class TestPageLinks(unittest.TestCase):
                         assert_error = True
                     except Exception as e:
                         # handle any other exception
-                        print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
+                        print("Error '{}' occurred. Arguments {}.".format(e, e.args))
         except Exception as e:
             # handle any other exception
-            print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
+            print("Error '{}' occurred. Arguments {}.".format(e, e.args))
         finally:
             linkcheck_helper.write_report(test_name, assert_error, link_url, status)
         return
@@ -117,6 +126,9 @@ class TestPageLinks(unittest.TestCase):
     @staticmethod
     def test_qed_mainpagelinks():
         test_name = "Test of Ubertool Mainpage Article Links "
+        assert_error = False
+        link_url = ""
+        status = ""
         try:  # verify that all links on a model page (main article section) produce status code of 200
             for main_server in servers:
                 response = requests.get(main_server + "/ubertool")
@@ -136,10 +148,10 @@ class TestPageLinks(unittest.TestCase):
                         assert_error = True
                     except Exception as e:
                         # handle any other exception
-                        print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
+                        print("Error '{}' occurred. Arguments {}.".format(e, e.args))
         except Exception as e:
             # handle any other exception
-            print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
+            print("Error '{}' occurred. Arguments {}.".format(e, e.args))
         finally:
             linkcheck_helper.write_report(test_name, assert_error, link_url, status)
         return
@@ -147,6 +159,9 @@ class TestPageLinks(unittest.TestCase):
     @staticmethod
     def test_qed_rightlinks():
         test_name = "Test of Ubertool Mainpage Right Column Links "
+        assert_error = False
+        link_url = ""
+        status = ""
         try:  # verify that all links on a model page produce status code of 200
             for main_server in servers:
                 response = requests.get(main_server + "/ubertool")
@@ -155,7 +170,6 @@ class TestPageLinks(unittest.TestCase):
                 # assuming a single div/class by this name
                 right_links = div_tags_right[0].find_all('a')
                 if right_links:
-                    assert_error = False
                     link_url = [""] * len(right_links)
                     status = [""] * len(right_links)
                     link_url = linkcheck_helper.build_http_links(main_server, right_links)
@@ -166,10 +180,10 @@ class TestPageLinks(unittest.TestCase):
                         assert_error = True
                     except Exception as e:
                         # handle any other exception
-                        print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
+                        print("Error '{}' occurred. Arguments {}.".format(e, e.args))
         except Exception as e:
             # handle any other exception
-            print("Error '{}' occurred. Arguments {}.".format(e.message, e.args))
+            print("Error '{}' occurred. Arguments {}.".format(e, e.args))
         finally:
             linkcheck_helper.write_report(test_name, assert_error, link_url, status)
         return

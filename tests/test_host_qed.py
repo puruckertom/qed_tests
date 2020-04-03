@@ -29,10 +29,22 @@ models_nonbeta = ["agdrift/", "beerex/", "iec/", "sip/", "stir/", 'terrplant/', 
 models_IO = ["AgDrift", "Bee-REX", "IEC", "SIP", "STIR", "TerrPlant", "T-HERPS", 'T-REX 1.5.2',
                  "KABAM", "RICE", "Agdisp", "Earthworm", "Insect", "Pat", "Perfum", "Pfam",
                  "PWC", "SAM", "TED", "VarroaPop"]
-                            
 
-non_pram_modules = ["cts/", "hms/", 'pisces/', 'pisces/watershed/', 'pisces/stream/', 'pisces/species/', 'pisces/algorithms/',
-                    'pisces/references/','hwbi/', 'wqt/', 'hem/', 'cyan/']
+#track active hms subpages
+hms_subpages = ['hms/watershed_workflow/', 'hms/meteorology/', 'hms/solarcalculator/', 'hms/hydrology/', 'hms/hms/hydrology/evapotranspiration/',
+                'hms/hydrology/precipitation/', 'hms/hydrology/soilmoisture/', 'hms/hydrology/subsurfaceflow/',
+                'hms/hydrology/surfacerunoff/', 'hms/hydrology/temperature/', 'hms/water_quality/', 'hms/api_doc/',
+                'hms/Documents/', 'hms/precip_compare/', 'hms/runoff_compare/']
+
+#note that 'rest' 'api' 'source' and 'wiki' can't have the trailing slashes or they fail
+non_pram_modules = ["pram/", "pram/links/", "cts/", "hms/", 'pisces/', 'pisces/watershed/', 'pisces/stream/', 'pisces/species/', 'pisces/algorithms/',
+                    'pisces/references/','hwbi/', 'wqt/', 'cyan/', 'api', 'rest', 'source', 'wiki'] + hms_subpages
+                    #note that rest can't have the trailing slash or it tries to proxy to backend
+
+#note that 'rest' 'api' 'source'  can't have the trailing slashes or they fail
+non_pram_modules_public = ["pram/", "pram/links/", "cts/", "hms/", 'pisces/', 'pisces/watershed/', 'pisces/stream/', 'pisces/species/',
+                           'pisces/algorithms/','pisces/references/', 'wqt/', 'cyan/', 'api', 'rest', 'source',
+                           'wiki/'] + hms_subpages
 
 
 pages = ["","input", "algorithms", "references"] #for now leaving out "qaqc" page
@@ -51,7 +63,7 @@ s5_model_pages_pram_nonbeta = [internal_server_5 + 'pram/' + m + p for m in mode
 
 
 #non-pram modules
-pub_model_pages_other = [pub_server + m for m in non_pram_modules]
+pub_model_pages_other = [pub_server + m for m in non_pram_modules_public]
 s1_model_pages_other = [internal_server_1  + m for m in non_pram_modules]
 s5_model_pages_other= [internal_server_5  + m for m in non_pram_modules]
 
@@ -99,7 +111,7 @@ class TestQEDHost(unittest.TestCase):
         else:
             body = {"text": message}
         url = hook_url
-        response = requests.post(url, data=json.dumps(body), headers = {'Content-type': 'application/json'})
+        response = requests.post(url, data=json.dumps(body), headers={'Content-type': 'application/json'})
         return
 
 
@@ -114,36 +126,43 @@ class TestQEDHost(unittest.TestCase):
         else:
             return message
 
-
-    def check_response(self, page_list, code, hook_url=None, server=None, login = False, verify=True):
+    def check_response(self, page_list, code, hook_url=None, server=None, login=False, verify=True):
         test_name = "Model page access "
         if login:
-            response = [None for x in range(0,len(page_list))]
+            response = [None for x in range(0, len(page_list))]
             for x, val in enumerate(page_list):
                 print(val)
                 br = mechanicalsoup.StatefulBrowser(raise_on_404=False)
                 initial_response = br.open(val)
                 if initial_response.status_code < 400:
-                    #login and authenticate
-                    br.select_form('form[name="auth"]')
-                    br["username"] = smoketest_secrets.qed_user
-                    br["password"] = smoketest_secrets.qed_pass
-                    response2 = br.submit_selected()
-                    response[x] = response2.status_code
+                    # login and authenticate
+                    try:
+                        br.select_form('form[name="auth"]')
+                        br["username"] = smoketest_secrets.qed_user
+                        br["password"] = smoketest_secrets.qed_pass
+                        response2 = br.submit_selected()
+                        response[x] = response2.status_code
+                    except mechanicalsoup.utils.LinkNotFoundError as e:
+                        response[x] = 404 #No login when expected = 404 (patch until status code update goes live)
                 else:
                     response[x] = initial_response.status_code
         else:
-            response = [requests.get(m, verify=verify).status_code for m in page_list]
+            response = [None for x in range(0, len(page_list))]
+            for x, val in enumerate(page_list):
+                try:
+                    response[x] = requests.get(page_list[x], verify=verify).status_code
+                except Exception as e:
+                    response[x] = "Error" #if MaxRetries error or other connection error
         try:
             assert all(resp == code for resp in response)
-                #assert(npt.assert_array_equal(response, 200, '200 error', True)
+                # assert(npt.assert_array_equal(response, 200, '200 error', True)
         except AssertionError as e:
             fail_indices = np.where(np.array([resp != code for resp in response]))
             print(fail_indices)
             fails = [page_list[i] for i in np.nditer(fail_indices)]
             codes = [response[i] for i in np.nditer(fail_indices)]
             message = tuple(["Http response failed for: " + str(x) + ". Expecting *" + str(code) + "* but found *" +
-                             str(y) + "*." for x, y  in zip(fails,codes)])
+                             str(y) + "*." for x, y in zip(fails, codes)])
             slack_message = self.are_all_down("\n".join(message), page_list, server)
             if hook_url is not None:
                 self.send_slack_message(slack_message, hook_url, server)
@@ -156,15 +175,15 @@ class TestQEDHost(unittest.TestCase):
 
     #THE TESTS
     def test_pub_server_200(self):
-        self.check_response(pub_model_pages,200, smoketest_secrets.pub_server_hook, pub_server, login=True)
+        self.check_response(pub_model_pages, 200, smoketest_secrets.pub_server_hook, pub_server, login=True)
         return
 
     def test_internal_s1_200(self):
-        self.check_response(s1_model_pages,200,smoketest_secrets.s1_hook, internal_server_1)
+        self.check_response(s1_model_pages, 200, smoketest_secrets.s1_hook, internal_server_1)
         return
 
     def test_interval_s5_200(self):
-        self.check_response(s5_model_pages,200, smoketest_secrets.s5_hook, internal_server_5, verify=False)
+        self.check_response(s5_model_pages, 200, smoketest_secrets.s5_hook, internal_server_5, verify=False)
 
 
 
